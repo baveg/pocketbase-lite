@@ -10,6 +10,8 @@ export const isDictionary = <T extends Record<string, any> = Record<string, any>
 
 export const isFun = (v: any): v is Fun => typeof v === 'function';
 
+export const isPromise = (v: any): v is Promise<any> => isObject(v) && isFun(v.then);
+
 export const isString = (v: any): v is string => typeof v === 'string';
 
 export const isNumber = (v: any): v is number => typeof v === 'number';

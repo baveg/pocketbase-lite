@@ -1,4 +1,4 @@
-import { isFun } from "./check";
+import { isDefined, isFun, isPromise } from "./check";
 import { Logger, logger } from "./logger";
 import { removeItem } from "./removeItem";
 import { toError } from "./to";
@@ -9,9 +9,9 @@ export type Next<T> = T|((prev: T) => T);
 
 export class Observer<T> {
     protected readonly log: Logger;
-    protected readonly listeners: Listener<T>[] = []
-    protected v: T;
-    protected isBind?: boolean;
+    private readonly listeners: Listener<T>[] = []
+    private v: T;
+    private isBind?: boolean;
 
     constructor(
         init: T,
@@ -86,30 +86,54 @@ export class Observer<T> {
         this.listeners.length = 0;
     }
 
-    map<U>(convert: (value: T) => U, reverse?: (value: U) => T) {
+    map<U>(convert: (value: T) => U|Promise<U>, reverse?: (value: U) => T) {
         return new ObserverMap<T, U>(this, convert, reverse);
+    }
+
+    async wait(filter: (value: T) => boolean = isDefined) {
+        return new Promise<T>(resolve => {
+            const off = this.on(value => {
+                if (filter(value)) {
+                    off();
+                    resolve(value);
+                }
+            });
+        })
     }
 }
 
 export class ObserverMap<T, U> extends Observer<U> {
     private sourceOff?: () => void;
+    private vSource?: T;
 
     constructor(
         public source: Observer<T>,
-        public convert: (value: T) => U,
+        public convert: (value: T) => U|Promise<U>,
         public reverse?: (value: U) => T,
     ) {
         super(undefined as any, source.key + 'Map');
     }
 
-    refresh = () => {
-        this.set(this.convert(this.source.get()));
+    sync() {
+        const vSource = this.source.get();
+        if (vSource !== this.vSource) return;
+
+        const result = this.convert(vSource);
+
+        if (isPromise(result)) {
+            result.then((value) => {
+                this.set(value);
+            }).catch((error) => {
+                this.log.w('sync', vSource, error)
+            });
+        } else {
+            this.set(result);
+        }
     }
 
     get() {
-        if (this.v !== undefined) return this.v;
-        this.refresh();
-        return this.v;
+        this.sync();
+        return super.get();
     }
 
     set(next: Next<U>, force?: boolean) {
@@ -126,7 +150,7 @@ export class ObserverMap<T, U> extends Observer<U> {
 
         if (!this.sourceOff) {
             this.log.d('connect');
-            this.sourceOff = this.source.on(this.refresh);
+            this.sourceOff = this.source.on(() => this.sync());
         }
 
         return off;
