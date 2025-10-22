@@ -22,6 +22,12 @@ export class Observer<T> {
         this.log.d('new', init);
     }
 
+    onError(method: string, error: any) {
+        error = toError(error);
+        this.log.e(method, error);
+        if (error) throw error;
+    }
+
     isEqual(prev: T, next: T) {
         return prev === next;
     }
@@ -60,11 +66,16 @@ export class Observer<T> {
     }
 
     set(next: Next<T>, force?: boolean) {
-        if (isFun(next)) next = next(this.get());
-        if (!force && this.isEqual(this.v, next)) return;
-        this.v = next;
-        this.log.d('set', next);
-        for (const listener of this.listeners) listener(next);
+        try {
+            if (isFun(next)) next = next(this.get());
+            if (!force && this.isEqual(this.v, next)) return;
+            this.v = next;
+            this.log.d('set', next);
+            for (const listener of this.listeners) listener(next);
+        }
+        catch (error) {
+            this.onError('set', error);
+        }
     }
 
     signal() {
@@ -73,7 +84,14 @@ export class Observer<T> {
 
     on(listener: Listener<T>, isRepeat?: boolean): Unsubscribe {
         this.log.d('on', listener, isRepeat);
-        if (isRepeat) listener(this.get());
+        if (isRepeat) {
+            try {
+                listener(this.get());
+            }
+            catch (error) {
+                this.onError('on', error);
+            }
+        }
         this.listeners.push(listener);
         return () => {
             removeItem(this.listeners, listener);
@@ -116,7 +134,8 @@ export class ObserverMap<T, U> extends Observer<U> {
 
     sync() {
         const vSource = this.source.get();
-        if (vSource !== this.vSource) return;
+        if (vSource === this.vSource) return;
+        this.vSource = vSource;
 
         const result = this.convert(vSource);
 
@@ -124,7 +143,7 @@ export class ObserverMap<T, U> extends Observer<U> {
             result.then((value) => {
                 this.set(value);
             }).catch((error) => {
-                this.log.w('sync', vSource, error)
+                this.onError('sync', error);
             });
         } else {
             this.set(result);
@@ -138,8 +157,8 @@ export class ObserverMap<T, U> extends Observer<U> {
 
     set(next: Next<U>, force?: boolean) {
         if (!this.reverse) {
-            this.log.w('set no reverse', next, force)
-            throw toError('no reverse');
+            this.onError('set', 'no reverse');
+            return;
         }
         if (isFun(next)) next = next(this.get());
         this.source.set(this.reverse(next), force);
