@@ -1,9 +1,9 @@
 import { toMe } from '../to';
 import { debounce } from './debounce';
 import { mapped } from './mapped';
-import { Observer } from './observer';
+import { Obs } from './Obs';
 
-export const debounced = <T>(source: Observer<T>, ms: number): Observer<T> => {
+export const debounced = <T>(source: Obs<T>, ms: number): Obs<T> => {
   const target = mapped(source, toMe, toMe);
   const original = target.sync.bind(mapped);
   const fun = debounce(() => original(), ms);

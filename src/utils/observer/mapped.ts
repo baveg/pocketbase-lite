@@ -1,12 +1,12 @@
 import { isFun, isPromise } from '../check';
-import { Listener, Next, Observer } from './observer';
+import { Listener, Next, Obs } from './Obs';
 
-export class Mapped<T, U> extends Observer<U> {
+export class Mapped<T, U> extends Obs<U> {
   private sourceOff?: () => void;
   private isInit?: boolean;
 
   constructor(
-    public source: Observer<T>,
+    public source: Obs<T>,
     public convert: (value: T) => U | Promise<U>,
     public reverse?: (value: U) => T
   ) {
@@ -67,7 +67,7 @@ export class Mapped<T, U> extends Observer<U> {
 }
 
 export const mapped = <T, U>(
-  source: Observer<T>,
+  source: Obs<T>,
   convert: (value: T) => U | Promise<U>,
   reverse?: (value: U) => T
 ) => {

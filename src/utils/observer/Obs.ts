@@ -6,7 +6,7 @@ export type Listener<T> = (next: T) => void;
 export type Unsubscribe = () => void;
 export type Next<T> = T | ((prev: T) => T);
 
-export class Observer<T> {
+export class Obs<T> {
   protected readonly log: Logger;
   private readonly listeners: Listener<T>[] = [];
   private v: T;
@@ -70,13 +70,3 @@ export class Observer<T> {
     });
   }
 }
-
-interface NewObserver {
-  <T>(): Observer<T | undefined>;
-  <T>(init: undefined): Observer<T | undefined>;
-  <T>(init: undefined, key: string): Observer<T | undefined>;
-  <T>(init: T): Observer<T>;
-  <T>(init: T, key: string): Observer<T>;
-}
-export const observer = (<T>(init: T, key: string): Observer<T> =>
-  new Observer(init, key)) as NewObserver;

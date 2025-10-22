@@ -1,5 +1,5 @@
-import { Observer } from './observer';
+import { Obs } from './Obs';
 
-export const signal = <T>(source: Observer<T>) => {
+export const signal = <T>(source: Obs<T>) => {
   source.set(source.get(), true);
 };

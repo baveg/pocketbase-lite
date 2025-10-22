@@ -1,7 +1,4 @@
 import { setter } from './binded';
-import { Observer } from './observer';
+import { Obs } from './Obs';
 
-export const use = <T>(source: Observer<T>): [T, typeof source.set] => [
-  source.get(),
-  setter(source),
-];
+export const use = <T>(source: Obs<T>): [T, typeof source.set] => [source.get(), setter(source)];

@@ -1,6 +1,6 @@
-import { Observer } from './observer';
+import { Obs } from './Obs';
 
-export const binded = <T>(source: Observer<T>): Observer<T> => {
+export const binded = <T>(source: Obs<T>): Obs<T> => {
   if (!(source as any).isBinded) {
     (source as any).isBinded = true;
     source.get = source.get.bind(source);
@@ -9,5 +9,5 @@ export const binded = <T>(source: Observer<T>): Observer<T> => {
   return source;
 };
 
-export const getter = <T>(source: Observer<T>) => binded(source).get;
-export const setter = <T>(source: Observer<T>) => binded(source).set;
+export const getter = <T>(source: Obs<T>) => binded(source).get;
+export const setter = <T>(source: Obs<T>) => binded(source).set;
