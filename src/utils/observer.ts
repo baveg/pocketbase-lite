@@ -1,7 +1,9 @@
 import { isDefined, isFun, isPromise } from "./check";
 import { Logger, logger } from "./logger";
 import { removeItem } from "./removeItem";
-import { toError } from "./to";
+import { debounce } from "./debounce";
+import { throttle } from "./throttle";
+import { toMe } from "./to";
 
 export type Listener<T> = (next: T) => void;
 export type Unsubscribe = () => void;
@@ -20,12 +22,6 @@ export class Observer<T> {
         this.v = init;
         this.log = logger(key + 'Observer');
         this.log.d('new', init);
-    }
-
-    onError(method: string, error: any) {
-        error = toError(error);
-        this.log.e(method, error);
-        if (error) throw error;
     }
 
     isEqual(prev: T, next: T) {
@@ -66,16 +62,11 @@ export class Observer<T> {
     }
 
     set(next: Next<T>, force?: boolean) {
-        try {
-            if (isFun(next)) next = next(this.get());
-            if (!force && this.isEqual(this.v, next)) return;
-            this.v = next;
-            this.log.d('set', next);
-            for (const listener of this.listeners) listener(next);
-        }
-        catch (error) {
-            this.onError('set', error);
-        }
+        if (isFun(next)) next = next(this.get());
+        if (!force && this.isEqual(this.v, next)) return;
+        this.v = next;
+        this.log.d('set', next);
+        for (const listener of this.listeners) listener(next);
     }
 
     signal() {
@@ -84,14 +75,7 @@ export class Observer<T> {
 
     on(listener: Listener<T>, isRepeat?: boolean): Unsubscribe {
         this.log.d('on', listener, isRepeat);
-        if (isRepeat) {
-            try {
-                listener(this.get());
-            }
-            catch (error) {
-                this.onError('on', error);
-            }
-        }
+        if (isRepeat) listener(this.get());
         this.listeners.push(listener);
         return () => {
             removeItem(this.listeners, listener);
@@ -116,7 +100,23 @@ export class Observer<T> {
                     resolve(value);
                 }
             });
-        })
+        });
+    }
+
+    debounce(ms: number): Observer<T> {
+        const mapped = this.map(toMe, toMe);
+        const original = mapped.sync.bind(mapped);
+        const debounced = debounce(() => original(), ms);
+        mapped.sync = () => debounced(undefined);
+        return mapped;
+    }
+
+    throttle(ms: number): Observer<T> {
+        const mapped = this.map(toMe, toMe);
+        const original = mapped.sync.bind(mapped);
+        const throttled = throttle(() => original(), ms);
+        mapped.sync = () => throttled(undefined);
+        return mapped;
     }
 }
 
@@ -143,7 +143,7 @@ export class ObserverMap<T, U> extends Observer<U> {
             result.then((value) => {
                 this.set(value);
             }).catch((error) => {
-                this.onError('sync', error);
+                this.log.e('sync', vSource, result, error);
             });
         } else {
             this.set(result);
@@ -157,7 +157,7 @@ export class ObserverMap<T, U> extends Observer<U> {
 
     set(next: Next<U>, force?: boolean) {
         if (!this.reverse) {
-            this.onError('set', 'no reverse');
+            this.log.e('set', 'no reverse');
             return;
         }
         if (isFun(next)) next = next(this.get());
