@@ -1,7 +1,7 @@
 import { req, ReqError, ReqOptions } from "../utils/req";
 import { isDictionary, isString } from "../utils/check";
 import { observer } from "../utils/observerFun";
-import { observerStored } from "../utils/observerStored";
+import { observerStored } from "../utils/observer/stored";
 import { logger } from "../utils/logger";
 import { toError } from "../utils/to";
 import { PbAuth } from "./pbTypes";
