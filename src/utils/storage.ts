@@ -30,10 +30,8 @@ export const newStorage = (): Storage => {
   return s;
 };
 
-export const getStorage = () => (
-  storage || (storage = glb.localStorage || newStorage())
-)
+export const getStorage = () => storage || (storage = glb.localStorage || newStorage());
 
 export const setStorage = (value: typeof storage) => {
   storage = value;
-}
+};

@@ -1,6 +1,6 @@
-import { toError } from "../utils/to";
-import { PbColl } from "./PbColl";
-import { PbModelBase, PbOptions } from "./pbTypes";
+import { toError } from '../utils/to';
+import { PbColl } from './PbColl';
+import { PbModelBase, PbOptions } from './pbTypes';
 
 export class PbAuthColl<T extends PbModelBase> extends PbColl<T> {
   signUp(email: string, password: string, o: PbOptions<T> = {}) {
@@ -13,15 +13,17 @@ export class PbAuthColl<T extends PbModelBase> extends PbColl<T> {
     return this.call('POST', `collections/${this.name}/auth-with-password`, {
       data: { identity, password },
       ...o,
-    }).then((result: any) => {
-      const { token, record } = result || {};
-      return this.client.setAuth({ ...record, token });
-    }).catch(error => {
-      this.log.w('login error', error);
-      throw error;
-    });
+    })
+      .then((result: any) => {
+        const { token, record } = result || {};
+        return this.client.setAuth({ ...record, token });
+      })
+      .catch((error) => {
+        this.log.w('login error', error);
+        throw error;
+      });
   }
-  
+
   logout() {
     this.log.i('logout');
     this.client.setAuth(undefined);
@@ -33,19 +35,19 @@ export class PbAuthColl<T extends PbModelBase> extends PbColl<T> {
       data: { email },
       ...o,
     });
-  };
+  }
 
   refreshToken(o: PbOptions<T> = {}) {
     this.log.i('refreshToken', o);
     return this.call('POST', `collections/${this.name}/auth-refresh`, {
       ...o,
-    }).then(result => {
+    }).then((result) => {
       const { status, message, token, record } = result || {};
       if (status === 401) {
-        this.logout()
+        this.logout();
         throw toError(message);
       }
       return this.client.setAuth({ ...record, token });
     });
-  };
+  }
 }

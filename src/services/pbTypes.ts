@@ -1,4 +1,4 @@
-import { ReqOptions } from "../utils/req";
+import { ReqOptions } from '../utils/req';
 
 export type PbOperator =
   | '=' // Equal
@@ -44,7 +44,7 @@ export interface PbOptions<T extends PbModelBase> {
   page?: number;
   perPage?: number;
   skipTotal?: boolean;
-  data?: any
+  data?: any;
   req?: ReqOptions<T>;
 }
 

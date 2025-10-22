@@ -7,11 +7,11 @@ export const reqFetch = async <T = any>(ctx: ReqContext<T>): Promise<void> => {
 
     const o = ctx.options;
 
-    const fetchRequest: RequestInit = ctx.fetchInit = {
+    const fetchRequest: RequestInit = (ctx.fetchInit = {
       body: ctx.body as any,
       headers: ctx.headers as any,
       method: ctx.method,
-    };
+    });
 
     const abortCtrl = new AbortController();
     fetchRequest.signal = abortCtrl.signal;
@@ -23,7 +23,10 @@ export const reqFetch = async <T = any>(ctx: ReqContext<T>): Promise<void> => {
 
     if (o.before) await o.before(ctx);
 
-    const response = await (typeof o.fetch === 'function' ? o.fetch : fetch)(ctx.url as any, fetchRequest);
+    const response = await (typeof o.fetch === 'function' ? o.fetch : fetch)(
+      ctx.url as any,
+      fetchRequest
+    );
     ctx.res = response;
     ctx.status = response.status;
     ctx.ok = response.ok;

@@ -1,8 +1,11 @@
-import { isArray, isDefined, isObject } from "../check";
-import { jsonStringify } from "../json";
-import { FormDataObject } from "./reqTypes";
+import { isArray, isDefined, isObject } from '../check';
+import { jsonStringify } from '../json';
+import { FormDataObject } from './reqTypes';
 
-export const reqFormData = (form: FormDataObject | FormData | null | undefined, base?: FormData) => {
+export const reqFormData = (
+  form: FormDataObject | FormData | null | undefined,
+  base?: FormData
+) => {
   if (!form) return;
   if (form instanceof FormData) return form;
   const r = base || new FormData();
@@ -16,8 +19,7 @@ export const reqFormData = (form: FormDataObject | FormData | null | undefined, 
       } else if (v instanceof Blob) {
       } else if (v instanceof Date) {
         v = v.toISOString();
-      }
-      else {
+      } else {
         v = jsonStringify(v);
       }
     }

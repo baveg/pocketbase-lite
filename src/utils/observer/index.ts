@@ -7,4 +7,4 @@ export * from './signal';
 export * from './stored';
 export * from './throttle';
 export * from './throttled';
-export * from './use$';
+export * from './use';

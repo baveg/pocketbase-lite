@@ -1,5 +1,5 @@
-import type { Logger } from "../logger";
-import type { ReqError } from "./reqError";
+import type { Logger } from '../logger';
+import type { ReqError } from './reqError';
 
 export type FormDataObject = { [prop: string]: any };
 export type ReqURL = string | URL;
