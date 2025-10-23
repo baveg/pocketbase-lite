@@ -1,0 +1,1 @@
+export const toError = (v: any) => (v instanceof Error ? v : new Error(String(v)));

@@ -1,19 +1,13 @@
-export type Fun = (...args: any[]) => any;
+
 
 export const isArray = <T extends any>(v: any): v is T[] => Array.isArray(v);
 
-export const isDefined = <T>(v: T | null | undefined): v is NonNullable<T> | null =>
-  v !== undefined;
 
 export const isObject = <T extends Object>(v: unknown): v is T =>
   typeof v === 'object' && v !== null;
 
 export const isDictionary = <T extends Record<string, any> = Record<string, any>>(v: any): v is T =>
   isObject(v) && !isArray(v);
-
-export const isFun = (v: any): v is Fun => typeof v === 'function';
-
-export const isPromise = (v: any): v is Promise<any> => isObject(v) && isFun(v.then);
 
 export const isString = (v: any): v is string => typeof v === 'string';
 

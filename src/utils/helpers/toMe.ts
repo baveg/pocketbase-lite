@@ -1,0 +1,1 @@
+export const toMe = <T = any>(v: T): T => v;

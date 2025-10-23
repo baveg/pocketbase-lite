@@ -1,5 +1,3 @@
-import { toVoid } from '@common/utils';
-
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 export interface Logger {
@@ -33,4 +31,5 @@ export const logger = (tag: string): Logger => {
   return { d: l('debug'), i: l('info'), w: l('warn'), e: l('error') };
 };
 
-export const voidLogger = { d: toVoid, i: toVoid, w: toVoid, e: toVoid };
+const n = () => {};
+export const voidLogger = { d: n, i: n, w: n, e: n };
