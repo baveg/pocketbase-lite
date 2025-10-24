@@ -31,7 +31,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "fluxio": ["./fluxio/src/index"],
-      "fluxio/*": ["./fluxio/src/*"],
+      "fluxio/*": ["./fluxio/src/*"]
     }
   },
   "include": [
@@ -39,6 +39,6 @@
     "vite.config",
     "common/**/*",
     "pocketbase-lite/**/*",
-    "src/**/*",
+    "src/**/*"
   ]
 }

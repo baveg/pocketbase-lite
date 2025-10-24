@@ -1,4 +1,15 @@
-import { isArray, isDefined, jsonStringify, toError, Logger, logger, count, ReqMethod, ReqOptions, ReqParams } from 'fluxio';
+import {
+  isArray,
+  isDefined,
+  jsonStringify,
+  toError,
+  Logger,
+  logger,
+  count,
+  ReqMethod,
+  ReqOptions,
+  ReqParams,
+} from 'fluxio';
 import { PbOptions, PbCreate, PbKeys, PbModelBase, PbPage, PbUpdate, PbWhere } from './pbTypes';
 import { PbClient } from './PbClient';
 
@@ -24,11 +35,9 @@ export class PbColl<T extends PbModelBase> {
         const [operator, operand] = isArray(propFilter) ? propFilter : ['=', propFilter];
 
         const operandString =
-          typeof operand === 'string'
-            ? `"${operand}"`
-            : operand instanceof Date
-              ? jsonStringify(operand)
-              : operand;
+          typeof operand === 'string' ? `"${operand}"`
+          : operand instanceof Date ? jsonStringify(operand)
+          : operand;
 
         return `${key} ${operator} ${operandString}`;
       })
@@ -40,9 +49,9 @@ export class PbColl<T extends PbModelBase> {
 
   private reqOptions(method: ReqMethod, idOrUrl: string, o: PbOptions<T>): ReqOptions {
     const url =
-      idOrUrl.indexOf('/') === -1
-        ? `collections/${this.name}/records${idOrUrl ? `/${idOrUrl}` : ''}`
-        : idOrUrl;
+      idOrUrl.indexOf('/') === -1 ?
+        `collections/${this.name}/records${idOrUrl ? `/${idOrUrl}` : ''}`
+      : idOrUrl;
     let result: ReqOptions = { method, url, ...o.req };
 
     const p: ReqParams = {};

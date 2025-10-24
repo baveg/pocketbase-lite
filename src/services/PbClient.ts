@@ -1,4 +1,16 @@
-import { req, ReqError, ReqOptions, isDictionary, isString, flux, fluxStored, logger, toError, toDate, isNumber } from 'fluxio';
+import {
+  req,
+  ReqError,
+  ReqOptions,
+  isDictionary,
+  isString,
+  flux,
+  fluxStored,
+  logger,
+  toError,
+  toDate,
+  isNumber,
+} from 'fluxio';
 import { PbAuth } from './pbTypes';
 
 export const isPbAuth = (v: any): v is PbAuth =>
@@ -7,7 +19,7 @@ export const isPbAuth = (v: any): v is PbAuth =>
 export class PbClient {
   log = logger(this.key);
   error$ = flux<ReqError<any> | null>(null);
-  auth$ = fluxStored<PbAuth|undefined>(this.key + 'Auth', undefined, isPbAuth);
+  auth$ = fluxStored<PbAuth | undefined>(this.key + 'Auth', undefined, isPbAuth);
   url$ = fluxStored<string>(this.key + 'ApiUrl', '/api/', isString);
   timeOffset$ = fluxStored<number>(this.key + 'TimeOffset', 0, isNumber);
 
@@ -114,8 +126,7 @@ export class PbClient {
       this.log.d('sync time', localTime, serverTime);
       const timeOffset = serverTime - localTime;
       this.timeOffset$.set(timeOffset);
-    }
-    catch (error) {
+    } catch (error) {
       this.log.e('syncServerTime', error);
     }
     return this.serverTime();
