@@ -1,28 +1,25 @@
-import { req, ReqError, ReqOptions } from '../utils/req';
-import { isDictionary, isString } from '../utils/check';
-import { observer } from '../utils/observerFun';
-import { observerStored } from '../utils/observer/stored';
-import { logger } from '../utils/logger';
-import { toError } from '../utils/to';
+import { req, ReqError, ReqOptions, isDictionary, isString, flux, fluxStored, logger, toError, toDate, isNumber } from 'fluxio';
 import { PbAuth } from './pbTypes';
 
-export const isPbAuth = (v: PbAuth): v is PbAuth =>
+export const isPbAuth = (v: any): v is PbAuth =>
   isDictionary(v) && isString(v.token) && isString(v.id);
 
 export class PbClient {
   log = logger(this.key);
-  error$ = observer<ReqError<any> | null>(null);
-  auth$ = observerStored<PbAuth>(undefined, { key: this.key + 'Auth', storedCheck: isPbAuth });
-  url$ = observerStored<string>('/api/', { key: this.key + 'ApiUrl', storedCheck: isString });
-
+  error$ = flux<ReqError<any> | null>(null);
+  auth$ = fluxStored<PbAuth|undefined>(this.key + 'Auth', undefined, isPbAuth);
+  url$ = fluxStored<string>(this.key + 'ApiUrl', '/api/', isString);
+  timeOffset$ = fluxStored<number>(this.key + 'TimeOffset', 0, isNumber);
+  
   constructor(public readonly key: string = 'pbClient') {
     this.error$.on((error) => this.log.d('error', error));
     this.auth$.on((auth) => this.log.d('auth', auth));
     this.url$.on((url) => this.log.d('url', url));
+    this.serverTime();
   }
 
   setUrl(url: string) {
-    return this.url$.next(url);
+    return this.url$.set(url);
   }
 
   getUrl() {
@@ -34,7 +31,7 @@ export class PbClient {
       if (!isString(auth.token)) throw toError('no auth token');
       if (!isString(auth.id)) throw toError('no auth id');
     }
-    this.auth$.next(auth);
+    this.auth$.set(auth);
     return auth;
   }
 
@@ -56,7 +53,7 @@ export class PbClient {
     return {
       baseUrl,
       timeout: 10000,
-      onError: this.error$.next,
+      onError: this.error$.setter(),
       ...options,
       headers: {
         ...authHeaders,
@@ -70,5 +67,38 @@ export class PbClient {
       this.log.w('req error', error);
       throw error;
     });
+  }
+
+  getTime() {
+    return ;
+  }
+
+  async syncServerTime() {
+    try {
+      const start = Date.now();
+      const result = await this.req({ url: 'now' });
+      const serverTime = toDate(result).getTime();
+      const localTime = (start + Date.now()) / 2;
+      this.log.d('sync time', localTime, serverTime);
+      const timeOffset = serverTime - localTime;
+      this.timeOffset$.set(timeOffset);
+    }
+    catch (error) {
+      this.log.e('syncServerTime', error);
+    }
+    return this.serverTime();
+  }
+
+  serverTime() {
+    const timeOffset = this.timeOffset$.get();
+    if (timeOffset === 0) {
+      // sync but retourne value not sync
+      this.syncServerTime();
+    }
+    return timeOffset + Date.now();
+  }
+
+  serverDate() {
+    return new Date(this.serverTime());
   }
 }

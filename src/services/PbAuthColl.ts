@@ -1,4 +1,4 @@
-import { toError } from '../utils/to';
+import { toError } from 'fluxio';
 import { PbColl } from './PbColl';
 import { PbModelBase, PbOptions } from './pbTypes';
 
@@ -18,7 +18,7 @@ export class PbAuthColl<T extends PbModelBase> extends PbColl<T> {
         const { token, record } = result || {};
         return this.client.setAuth({ ...record, token });
       })
-      .catch((error) => {
+      .catch((error: any) => {
         this.log.w('login error', error);
         throw error;
       });
@@ -41,7 +41,7 @@ export class PbAuthColl<T extends PbModelBase> extends PbColl<T> {
     this.log.i('refreshToken', o);
     return this.call('POST', `collections/${this.name}/auth-refresh`, {
       ...o,
-    }).then((result) => {
+    }).then((result: any) => {
       const { status, message, token, record } = result || {};
       if (status === 401) {
         this.logout();

@@ -1,4 +1,4 @@
-import { ReqOptions } from '../utils/req';
+import { ReqOptions } from "fluxio";
 
 export type PbOperator =
   | '=' // Equal

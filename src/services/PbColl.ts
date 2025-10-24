@@ -1,11 +1,6 @@
-import { isArray, isDefined } from '../utils/check';
-import { jsonStringify } from '../utils/json';
-import { PbClient } from './PbClient';
-import { toError } from '../utils/to';
-import { Logger, logger } from '../utils/logger';
-import { getLength } from '../utils/getLength';
-import { req, ReqMethod, ReqOptions, ReqParams } from '../utils/req';
+import { isArray, isDefined, jsonStringify, toError, Logger, logger, count, ReqMethod, ReqOptions, ReqParams } from 'fluxio';
 import { PbOptions, PbCreate, PbKeys, PbModelBase, PbPage, PbUpdate, PbWhere } from './pbTypes';
+import { PbClient } from './PbClient';
 
 export class PbColl<T extends PbModelBase> {
   public readonly name: string;
@@ -63,7 +58,7 @@ export class PbColl<T extends PbModelBase> {
     if ((v = o.where)) p.filter = this.getFilter(v);
     if ((v = o.req?.params)) Object.assign(p, v);
 
-    if (getLength(p) > 0) result.params = { ...p, ...result.params };
+    if (count(p) > 0) result.params = { ...p, ...result.params };
     if ((v = o.data)) result.form = v;
 
     result = this.client.reqOptions(result);
@@ -76,7 +71,7 @@ export class PbColl<T extends PbModelBase> {
   call(method: ReqMethod, idOrUrl: string, o: PbOptions<T> = {}) {
     this.log.d('call', method, idOrUrl, o);
     const reqOptions = this.reqOptions(method, idOrUrl, o);
-    return req(reqOptions).catch((error) => {
+    return this.client.req(reqOptions).catch((error) => {
       this.log.w('call error', error);
       throw error;
     });
