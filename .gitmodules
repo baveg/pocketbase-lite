@@ -1,0 +1,3 @@
+[submodule "fluxio"]
+	path = fluxio
+	url = https://github.com/baveg/fluxio.git
