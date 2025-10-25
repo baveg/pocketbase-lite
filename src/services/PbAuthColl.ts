@@ -1,6 +1,6 @@
 import { toError } from 'fluxio';
 import { PbColl } from './PbColl';
-import { PbModelBase, PbOptions } from './pbTypes';
+import { PbModelBase, PbOptions } from './types';
 
 export class PbAuthColl<T extends PbModelBase> extends PbColl<T> {
   signUp(email: string, password: string, o: PbOptions<T> = {}) {

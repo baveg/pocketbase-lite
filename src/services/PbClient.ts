@@ -10,8 +10,11 @@ import {
   toError,
   toDate,
   isNumber,
+  pathJoin,
+  ReqMethod,
 } from 'fluxio';
-import { PbAuth } from './pbTypes';
+import { PbAuth, PbModelBase, PbOptions } from './types';
+import { getPbParams } from './getPbParams';
 
 export const isPbAuth = (v: any): v is PbAuth =>
   isDictionary(v) && isString(v.token) && isString(v.id);
@@ -22,6 +25,7 @@ export class PbClient {
   auth$ = fluxStored<PbAuth | undefined>(this.key + 'Auth', undefined, isPbAuth);
   url$ = fluxStored<string>(this.key + 'ApiUrl', '/api/', isString);
   timeOffset$ = fluxStored<number>(this.key + 'TimeOffset', 0, isNumber);
+  timeoutMs = 10000;
 
   constructor(public readonly key: string = 'pbClient') {
     this.error$.on((error) => this.log.d('error', error));
@@ -42,7 +46,8 @@ export class PbClient {
    * Get the current API base URL
    * @returns The base URL string
    */
-  getUrl() {
+  getUrl(service?: string) {
+    if (service) pathJoin(this.url$.get() || '', service);
     return this.url$.get() || '';
   }
 
@@ -76,28 +81,38 @@ export class PbClient {
     return this.getAuth()?.token || '';
   }
 
+  getAuthHeaders() {
+    const token = this.getToken();
+    return {
+      Authorization: `Bearer ${token}`,
+      'X-Auth-Token': token,
+    }
+  }
+
   /**
    * Build request options with authentication headers and base URL
    * @param options Partial request options to merge
    * @returns Complete request options with auth headers
    */
-  reqOptions(options: ReqOptions = {}): ReqOptions {
-    const baseUrl = this.getUrl();
-    const token = this.getToken();
-    const authHeaders = {
-      Authorization: `Bearer ${token}`,
-      'X-Auth-Token': token,
-    };
-    return {
-      baseUrl,
-      timeout: 10000,
+  getReqOptions<T extends PbModelBase>(method: ReqMethod, url: string, o: PbOptions<T> = {}): ReqOptions {
+    const result: ReqOptions = {
+      baseUrl: this.getUrl(),
+      method,
+      url,
       onError: this.error$.setter(),
-      ...options,
+      timeout: this.timeoutMs,
+      form: o.data,
+      ...o.req,
+      params: getPbParams(o),
       headers: {
-        ...authHeaders,
-        ...options.headers,
-      },
+        ...this.getAuthHeaders(),
+        ...o.req?.headers,
+      }
     };
+
+    this.log.d('reqOptions', method, url, o, result);
+
+    return result;
   }
 
   /**
@@ -105,8 +120,9 @@ export class PbClient {
    * @param options Request options
    * @returns Promise resolving to the response data
    */
-  req(options: ReqOptions = {}) {
-    return req(this.reqOptions(options)).catch((error) => {
+  req<T extends PbModelBase>(method: ReqMethod, idOrUrl: string, o: PbOptions<T> = {}) {
+    const reqOptions = this.getReqOptions(method, idOrUrl, o);
+    return req(reqOptions).catch((error) => {
       this.log.w('req error', error);
       throw error;
     });
@@ -120,7 +136,8 @@ export class PbClient {
   async syncServerTime() {
     try {
       const start = Date.now();
-      const result = await this.req({ url: 'now' });
+      const result = await this.req('GET', 'now');
+      // TODO catch use res header ???
       const serverTime = toDate(result).getTime();
       const localTime = (start + Date.now()) / 2;
       this.log.d('sync time', localTime, serverTime);
