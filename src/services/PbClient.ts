@@ -14,7 +14,7 @@ import {
   ReqMethod,
 } from 'fluxio';
 import { PbAuth, PbModelBase, PbOptions } from './types';
-import { getPbParams } from './getPbParams';
+import { pbParams } from './pbParams';
 
 export const isPbAuth = (v: any): v is PbAuth =>
   isDictionary(v) && isString(v.token) && isString(v.id);
@@ -103,7 +103,7 @@ export class PbClient {
       timeout: this.timeoutMs,
       form: o.data,
       ...o.req,
-      params: getPbParams(o),
+      params: pbParams(o),
       headers: {
         ...this.getAuthHeaders(),
         ...o.req?.headers,
