@@ -1,4 +1,4 @@
-import { toError } from 'fluxio';
+import { toError } from 'fluxio/cast/toError';
 import { PbColl } from './PbColl';
 import { PbModelBase, PbOptions } from './types';
 

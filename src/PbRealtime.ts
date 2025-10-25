@@ -1,6 +1,10 @@
-import { Dictionary, jsonParse, ReqContext, logger, jsonStringify, removeItem } from 'fluxio';
+import { Dictionary } from 'fluxio/check/isDictionary';
 import { PbClient } from './PbClient';
 import { PbModelBase, PbOptions } from './types';
+import { logger } from 'fluxio/logger/Logger';
+import { ReqContext } from 'fluxio/req/types';
+import { jsonParse, jsonStringify } from 'fluxio/string/json';
+import { removeItem } from 'fluxio/array/removeItem';
 
 export class PbRealtime {
   public readonly subscriptions: Dictionary<((data: any) => void)[]> = {};

@@ -1,18 +1,15 @@
-import {
-  req,
-  ReqError,
-  ReqOptions,
-  isDictionary,
-  isString,
-  flux,
-  fluxStored,
-  logger,
-  toError,
-  toDate,
-  isNumber,
-  pathJoin,
-  ReqMethod,
-} from 'fluxio';
+import { req } from 'fluxio/req/req';
+import { ReqError } from 'fluxio/req/ReqError';
+import { isDictionary } from 'fluxio/check/isDictionary';
+import { isString } from 'fluxio/check/isString';
+import { flux } from 'fluxio/flux/Flux';
+import { fluxStored } from 'fluxio/flux/fluxStored';
+import { logger } from 'fluxio/logger/Logger';
+import { toError } from 'fluxio/cast/toError';
+import { toDate } from 'fluxio/cast/toDate';
+import { isNumber } from 'fluxio/check/isNumber';
+import { pathJoin } from 'fluxio/url/pathJoin';
+import { ReqMethod, ReqOptions } from 'fluxio/req/types';
 import { PbAuth, PbModelBase, PbOptions } from './types';
 import { pbParams } from './pbParams';
 

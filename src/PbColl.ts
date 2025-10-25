@@ -1,13 +1,10 @@
-import {
-  toError,
-  Logger,
-  logger,
-  count,
-  ReqMethod,
-  isNumber,
-  pathJoin,
-  setUrlParams,
-} from 'fluxio';
+import { Logger, logger } from 'fluxio/logger/Logger';
+import { toError } from 'fluxio/cast/toError';
+import { isNumber } from 'fluxio/check/isNumber';
+import { pathJoin } from 'fluxio/url/pathJoin';
+import { ReqMethod } from 'fluxio/req/types';
+import { count } from 'fluxio/object/count';
+import { setUrlParams } from 'fluxio/url/setUrlParams';
 import { PbOptions, PbCreate, PbKeys, PbModelBase, PbPage, PbUpdate, PbWhere } from './types';
 import { PbClient } from './PbClient';
 
