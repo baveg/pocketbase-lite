@@ -119,7 +119,7 @@ export class PbColl<T extends PbModelBase> {
    * @param params Additional URL parameters
    * @returns URL parameters object
    */
-  getFileParams(thumb?: number|string, download?: boolean, params?: Record<string, string>) {
+  getFileParams(thumb?: number | string, download?: boolean, params?: Record<string, string>) {
     const p: Record<string, string> = {};
     if (thumb) p.thumb = isNumber(thumb) ? `${thumb}x${thumb}` : thumb;
     if (download) p.download = '1';
@@ -136,10 +136,16 @@ export class PbColl<T extends PbModelBase> {
    * @param params Additional URL parameters (optional)
    * @returns Promise resolving to Blob or null if id/filename missing
    */
-  getFile(id?: string, filename?: string, thumb?: number|string, download?: boolean, params?: Record<string, string>): Promise<Blob|null> {
+  getFile(
+    id?: string,
+    filename?: string,
+    thumb?: number | string,
+    download?: boolean,
+    params?: Record<string, string>
+  ): Promise<Blob | null> {
     if (!id || !filename) return Promise.resolve(null);
     return this.call('GET', this.getFileUrl(id, filename, thumb, download, params), {
-      req: { resType: 'blob' }
+      req: { resType: 'blob' },
     });
   }
 
@@ -152,7 +158,13 @@ export class PbColl<T extends PbModelBase> {
    * @param params Additional URL parameters (optional)
    * @returns File URL string or empty string if id/filename missing
    */
-  getFileUrl(id?: string, filename?: string, thumb?: number|string, download?: boolean, params?: Record<string, string>) {
+  getFileUrl(
+    id?: string,
+    filename?: string,
+    thumb?: number | string,
+    download?: boolean,
+    params?: Record<string, string>
+  ) {
     if (!id || !filename) return '';
 
     const clientUrl = this.client.url$.get();
@@ -173,7 +185,12 @@ export class PbColl<T extends PbModelBase> {
    * @param params Additional URL parameters (optional)
    * @returns Download URL string
    */
-  getDownloadUrl(id?: string, filename?: string, thumb?: number|string, params?: Record<string, string>) {
+  getDownloadUrl(
+    id?: string,
+    filename?: string,
+    thumb?: number | string,
+    params?: Record<string, string>
+  ) {
     return this.getFileUrl(id, filename, thumb, true, params);
   }
 }

@@ -86,7 +86,7 @@ export class PbClient {
     return {
       Authorization: `Bearer ${token}`,
       'X-Auth-Token': token,
-    }
+    };
   }
 
   /**
@@ -94,7 +94,11 @@ export class PbClient {
    * @param options Partial request options to merge
    * @returns Complete request options with auth headers
    */
-  getReqOptions<T extends PbModelBase>(method: ReqMethod, url: string, o: PbOptions<T> = {}): ReqOptions {
+  getReqOptions<T extends PbModelBase>(
+    method: ReqMethod,
+    url: string,
+    o: PbOptions<T> = {}
+  ): ReqOptions {
     const result: ReqOptions = {
       baseUrl: this.getUrl(),
       method,
@@ -107,7 +111,7 @@ export class PbClient {
       headers: {
         ...this.getAuthHeaders(),
         ...o.req?.headers,
-      }
+      },
     };
 
     this.log.d('reqOptions', method, url, o, result);
