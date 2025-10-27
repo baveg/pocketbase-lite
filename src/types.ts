@@ -22,21 +22,21 @@ export interface PbModelId {
   id: string;
 }
 
-export interface PbModelBase extends PbModelId {
+export interface PbModel extends PbModelId {
   created: Date;
   updated: Date;
 }
 
-export type PbCreate<T extends PbModelBase> = Omit<T, 'created' | 'updated' | 'id'>;
-export type PbUpdate<T extends PbModelBase> = Partial<PbCreate<T>>;
+export type PbCreate<T extends PbModel> = Omit<T, 'created' | 'updated' | 'id'>;
+export type PbUpdate<T extends PbModel> = Partial<PbCreate<T>>;
 
 export type PbOperand = string | number | null | boolean | Date;
 export type PbFilter = PbOperand | [PbOperator, PbOperand];
-export type PbWhereItem<T extends PbModelBase> = { [P in keyof T]?: PbFilter };
-export type PbWhere<T extends PbModelBase> = PbWhereItem<T> | PbWhereItem<T>[];
+export type PbWhereItem<T extends PbModel> = { [P in keyof T]?: PbFilter };
+export type PbWhere<T extends PbModel> = PbWhereItem<T> | PbWhereItem<T>[];
 export type PbKeys<T> = { [K in keyof T]: K extends symbol ? never : K }[keyof T];
 
-export interface PbOptions<T extends PbModelBase> {
+export interface PbOptions<T extends PbModel> {
   select?: PbKeys<T>[];
   where?: PbWhere<T>;
   orderBy?: (PbKeys<T> | `-${PbKeys<T>}`)[];
@@ -64,3 +64,23 @@ export interface PbAuth {
   name?: string;
   avatar?: File | Blob | string;
 }
+
+export interface PbAuthModel extends PbModel {
+  email?: string;
+  username?: string;
+  oldPassword?: string;
+  password?: string;
+  passwordConfirm?: string;
+  verified?: boolean;
+}
+
+// export interface FindOptions<T extends PbModel> {
+//   select?: Keys<T>[];
+//   where?: { [P in keyof T]?: string | number | Date };
+//   orderBy?: (Keys<T> | `-${Keys<T>}`)[];
+//   filter?: string;
+//   fields?: string;
+//   sort?: string;
+//   page?: number;
+//   perPage?: number;
+// }

@@ -1,8 +1,8 @@
 import { toError } from 'fluxio/cast/toError';
 import { PbColl } from './PbColl';
-import { PbModelBase, PbOptions } from './types';
+import { PbModel, PbOptions } from './types';
 
-export class PbAuthColl<T extends PbModelBase> extends PbColl<T> {
+export class PbAuthColl<T extends PbModel> extends PbColl<T> {
   signUp(email: string, password: string, o: PbOptions<T> = {}) {
     this.log.i('signUp', email, password, o);
     return this.create({ email, password, passwordConfirm: password } as any, o);

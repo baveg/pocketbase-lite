@@ -10,7 +10,7 @@ import { toDate } from 'fluxio/cast/toDate';
 import { isNumber } from 'fluxio/check/isNumber';
 import { pathJoin } from 'fluxio/url/pathJoin';
 import { ReqMethod, ReqOptions } from 'fluxio/req/types';
-import { PbAuth, PbModelBase, PbOptions } from './types';
+import { PbAuth, PbModel, PbOptions } from './types';
 import { pbParams } from './pbParams';
 
 export const isPbAuth = (v: any): v is PbAuth =>
@@ -23,6 +23,7 @@ export class PbClient {
   url$ = fluxStored<string>(this.key + 'ApiUrl', '/api/', isString);
   timeOffset$ = fluxStored<number>(this.key + 'TimeOffset', 0, isNumber);
   timeoutMs = 10000;
+  _realtime?: any;
 
   constructor(public readonly key: string = 'pbClient') {
     this.error$.on((error) => this.log.d('error', error));
@@ -70,6 +71,10 @@ export class PbClient {
     return this.auth$.get();
   }
 
+  getAuthId() {
+    return this.getAuth()?.id;
+  }
+
   /**
    * Get the current authentication token
    * @returns The token string or empty string if not authenticated
@@ -91,7 +96,7 @@ export class PbClient {
    * @param options Partial request options to merge
    * @returns Complete request options with auth headers
    */
-  getReqOptions<T extends PbModelBase>(
+  getReqOptions<T extends PbModel>(
     method: ReqMethod,
     url: string,
     o: PbOptions<T> = {}
@@ -121,7 +126,7 @@ export class PbClient {
    * @param options Request options
    * @returns Promise resolving to the response data
    */
-  req<T extends PbModelBase>(method: ReqMethod, idOrUrl: string, o: PbOptions<T> = {}) {
+  req<T extends PbModel>(method: ReqMethod, idOrUrl: string, o: PbOptions<T> = {}) {
     const reqOptions = this.getReqOptions(method, idOrUrl, o);
     return req(reqOptions).catch((error) => {
       this.log.w('req error', error);
@@ -172,3 +177,6 @@ export class PbClient {
     return new Date(this.serverTime());
   }
 }
+
+let pbClient: PbClient;
+export const getPbClient = () => pbClient || (pbClient = new PbClient());

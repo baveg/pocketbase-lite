@@ -1,12 +1,16 @@
 import { Dictionary } from 'fluxio/check/isDictionary';
-import { PbClient } from './PbClient';
-import { PbModelBase, PbOptions } from './types';
+import { getPbClient, PbClient } from './PbClient';
+import { PbModel, PbOptions } from './types';
 import { logger } from 'fluxio/logger/Logger';
 import { ReqContext } from 'fluxio/req/types';
 import { jsonParse, jsonStringify } from 'fluxio/string/json';
 import { removeItem } from 'fluxio/array/removeItem';
 
 export class PbRealtime {
+  static get(client: PbClient): PbRealtime {
+    return client._realtime || (client._realtime = new PbRealtime(client));
+  }
+
   public readonly subscriptions: Dictionary<((data: any) => void)[]> = {};
   public readonly wrappedListeners: Dictionary<(event: any) => void> = {};
 
@@ -21,9 +25,9 @@ export class PbRealtime {
   public heartbeat = 0;
   public attempts = 0;
 
-  constructor(public readonly client: PbClient) {}
+  private constructor(public readonly client: PbClient) {}
 
-  on<T extends PbModelBase>(
+  on<T extends PbModel>(
     collName: string,
     cb: (item: T, action: 'update' | 'create' | 'delete') => void,
     topic: string = '*',
@@ -232,3 +236,5 @@ export class PbRealtime {
     }
   }
 }
+
+export const pbRealtime = (client = getPbClient()) => PbRealtime.get(client);

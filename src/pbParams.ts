@@ -1,10 +1,10 @@
 import { isDefined } from 'fluxio/check/isDefined';
-import { PbModelBase, PbWhere, PbOptions } from './types';
+import { PbModel, PbWhere, PbOptions } from './types';
 import { jsonStringify } from 'fluxio/string/json';
 import { isArray } from 'fluxio/check/isArray';
 import { ReqParams } from 'fluxio/req/types';
 
-export const pbFilter = <T extends PbModelBase>(
+export const pbFilter = <T extends PbModel>(
   where: PbWhere<T> | undefined
 ): string | undefined => {
   if (!where) return undefined;
@@ -38,7 +38,7 @@ export interface PbParams extends ReqParams {
   filter?: string;
 }
 
-export const pbParams = <T extends PbModelBase>(o: PbOptions<T>): PbParams => {
+export const pbParams = <T extends PbModel>(o: PbOptions<T>): PbParams => {
   const p: PbParams = {};
 
   let v: any;

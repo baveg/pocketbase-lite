@@ -5,16 +5,19 @@ import { pathJoin } from 'fluxio/url/pathJoin';
 import { ReqMethod } from 'fluxio/req/types';
 import { count } from 'fluxio/object/count';
 import { setUrlParams } from 'fluxio/url/setUrlParams';
-import { PbOptions, PbCreate, PbKeys, PbModelBase, PbPage, PbUpdate, PbWhere } from './types';
-import { PbClient } from './PbClient';
+import { PbOptions, PbCreate, PbKeys, PbModel, PbPage, PbUpdate, PbWhere } from './types';
+import { getPbClient, PbClient } from './PbClient';
+import { pbRealtime } from './PbRealtime';
 
-export class PbColl<T extends PbModelBase> {
+export class PbColl<T extends PbModel> {
   public readonly name: string;
   public log: Logger;
+  public perPage = 100;
+  public allPerPage = 9999;
 
   constructor(
-    public client: PbClient,
-    name: string
+    name: string,
+    public client: PbClient = getPbClient(),
   ) {
     this.name = name;
     this.log = logger(name + 'Coll');
@@ -39,19 +42,19 @@ export class PbColl<T extends PbModelBase> {
     return this.call('GET', id, o);
   }
 
-  page(where: PbWhere<T>, page: number, perPage: number, o: PbOptions<T> = {}): Promise<PbPage<T>> {
+  page(where?: PbWhere<T>, page: number = 1, perPage: number = this.perPage, o: PbOptions<T> = {}): Promise<PbPage<T>> {
     this.log.d('page', where, page, perPage, o);
     return this.call('GET', '', { where, page, perPage, ...o });
   }
 
-  filter(where: PbWhere<T>, o: PbOptions<T> = {}) {
+  filter(where?: PbWhere<T>, o: PbOptions<T> = {}) {
     this.log.d('filter', where, o);
-    return this.page(where, 1, 100, { skipTotal: false, ...o });
+    return this.page(where, 1, this.perPage, { skipTotal: false, ...o });
   }
 
-  all(where: PbWhere<T>, o: PbOptions<T> = {}) {
+  all(where?: PbWhere<T>, o: PbOptions<T> = {}) {
     this.log.d('all', where, o);
-    return this.page(where, 1, 99999, o).then((r) => r.items);
+    return this.page(where, 1, this.allPerPage, o).then((r) => r.items);
   }
 
   one(where: PbWhere<T>, o: PbOptions<T> = {}): Promise<T | null> {
@@ -66,7 +69,7 @@ export class PbColl<T extends PbModelBase> {
     );
   }
 
-  count(where: PbWhere<T>, o: PbOptions<T> = {}) {
+  count(where?: PbWhere<T>, o: PbOptions<T> = {}) {
     this.log.d('count', where, o);
     return this.page(where, 1, 1, { select: [], skipTotal: false, ...o }).then((r) => r.totalItems);
   }
@@ -189,5 +192,9 @@ export class PbColl<T extends PbModelBase> {
     params?: Record<string, string>
   ) {
     return this.getFileUrl(id, filename, thumb, true, params);
+  }
+
+  on(cb: (item: T, action: "update" | "create" | "delete") => void, topic?: string, o?: PbOptions<T>) {
+    return pbRealtime(this.client).on(this.name, cb, topic, o);
   }
 }
