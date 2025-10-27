@@ -1,4 +1,3 @@
-import { toError } from 'fluxio/cast/toError';
 import { PbColl } from './PbColl';
 import { PbModel, PbOptions } from './types';
 
@@ -16,7 +15,7 @@ export class PbAuthColl<T extends PbModel> extends PbColl<T> {
     })
       .then((result: any) => {
         const { token, record } = result || {};
-        return this.client.setAuth({ ...record, token });
+        return this.client.setAuth({ ...record, coll: this.name, token });
       })
       .catch((error: any) => {
         this.log.w('login error', error);
@@ -24,30 +23,11 @@ export class PbAuthColl<T extends PbModel> extends PbColl<T> {
       });
   }
 
-  logout() {
-    this.log.i('logout');
-    this.client.setAuth(undefined);
-  }
-
   passwordReset(email: string, o: PbOptions<T> = {}) {
     this.log.i('passwordReset', email, o);
     return this.call('POST', `collections/${this.name}/request-password-reset`, {
       data: { email },
       ...o,
-    });
-  }
-
-  refreshToken(o: PbOptions<T> = {}) {
-    this.log.i('refreshToken', o);
-    return this.call('POST', `collections/${this.name}/auth-refresh`, {
-      ...o,
-    }).then((result: any) => {
-      const { status, message, token, record } = result || {};
-      if (status === 401) {
-        this.logout();
-        throw toError(message);
-      }
-      return this.client.setAuth({ ...record, token });
     });
   }
 }

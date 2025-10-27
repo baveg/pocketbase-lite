@@ -57,6 +57,7 @@ export interface PbPage<T> {
 }
 
 export interface PbAuth {
+  coll: string;
   token: string;
   id: string;
   email?: string;

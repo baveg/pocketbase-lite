@@ -14,7 +14,7 @@ import { PbAuth, PbModel, PbOptions } from './types';
 import { pbParams } from './pbParams';
 
 export const isPbAuth = (v: any): v is PbAuth =>
-  isDictionary(v) && isString(v.token) && isString(v.id);
+  isDictionary(v) && isString(v.token) && isString(v.coll) && isString(v.id);
 
 export class PbClient {
   log = logger(this.key);
@@ -175,6 +175,26 @@ export class PbClient {
    */
   serverDate() {
     return new Date(this.serverTime());
+  }
+
+  logout() {
+    this.auth$.set(undefined);
+  }
+
+  authRefresh(o: PbOptions<any> = {}) {
+    const auth = this.getAuth();
+    this.log.i('refreshToken', auth, o);
+    if (!auth) return;
+    return this.req('POST', `collections/${auth.coll}/auth-refresh`, {
+      ...o,
+    }).then((result: any) => {
+      const { status, message, token, record } = result || {};
+      if (status === 401) {
+        this.logout();
+        throw toError(message);
+      }
+      return this.setAuth({ ...record, coll: auth.coll, token });
+    });
   }
 }
 
