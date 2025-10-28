@@ -1,6 +1,6 @@
 import { req } from 'fluxio/req/req';
 import { ReqError } from 'fluxio/req/ReqError';
-import { isDictionary } from 'fluxio/check/isDictionary';
+import { Dictionary, isDictionary } from 'fluxio/check/isDictionary';
 import { isString } from 'fluxio/check/isString';
 import { flux } from 'fluxio/flux/Flux';
 import { fluxStored } from 'fluxio/flux/fluxStored';
@@ -12,6 +12,8 @@ import { ReqMethod, ReqOptions } from 'fluxio/req/types';
 import { toDate } from 'fluxio/cast/toDate';
 import { PbAuth, PbModel, PbOptions } from './types';
 import { pbParams } from './pbParams';
+import { count } from 'fluxio/object/count';
+import { setUrlParams } from 'fluxio/url/setUrlParams';
 
 export const isPbAuth = (v: any): v is PbAuth =>
   isDictionary(v) && isString(v.token) && isString(v.coll) && isString(v.id);
@@ -19,17 +21,21 @@ export const isPbAuth = (v: any): v is PbAuth =>
 export class PbClient {
   log = logger(this.key);
   error$ = flux<ReqError<any> | null>(null);
-  auth$ = fluxStored<PbAuth | undefined>(this.key + 'Auth', undefined, isPbAuth);
-  apiUrl$ = fluxStored<string>(this.key + 'ApiUrl', '', isString);
-  timeOffset$ = fluxStored<number>(this.key + 'TimeOffset', 0, isNumber);
+  auth$ = fluxStored<PbAuth | undefined>(this.key + 'Auth$', undefined, isPbAuth);
+  url$ = fluxStored<string>(this.key + 'Url$', '', isString);
+  offset$ = fluxStored<number>(this.key + 'Offset$', 0, isNumber);
   timeoutMs = 10000;
   _realtime?: any;
 
   constructor(public readonly key: string = 'pbClient') {
     this.error$.on((error) => this.log.d('error', error));
     this.auth$.on((auth) => this.log.d('auth', auth));
-    this.apiUrl$.on((apiUrl) => this.log.d('apiUrl', apiUrl));
+    this.url$.on((url) => this.log.d('url', url));
     this.initServerTime();
+  }
+
+  getApiUrl() {
+    return this.url$.get();
   }
 
   /**
@@ -37,8 +43,8 @@ export class PbClient {
    * @param url The base URL for API requests
    */
   setApiUrl(url: string) {
-    this.log.d('setApiUrl', url);
-    this.apiUrl$.set(url);
+    this.log.d('setUrl', url);
+    this.url$.set(url);
     this.initServerTime();
   }
 
@@ -46,10 +52,11 @@ export class PbClient {
    * Get the current API base URL
    * @returns The base URL string
    */
-  getApiUrl(service?: string) {
-    const apiUrl = this.apiUrl$.get() || '/api/';
-    const url = service ? pathJoin(apiUrl, service) : apiUrl;
-    this.log.d('getApiUrl', apiUrl, service, url);
+  getUrl(path?: string, params?: Dictionary<string>) {
+    const apiUrl = this.getApiUrl() || '/api/';
+    let url = path ? pathJoin(apiUrl, path) : apiUrl;
+    if (count(params) > 0) url = setUrlParams(url, params);
+    this.log.d('getUrl', apiUrl, path, params, url);
     return url;
   }
 
@@ -107,7 +114,7 @@ export class PbClient {
     o: PbOptions<T> = {}
   ): ReqOptions {
     const result: ReqOptions = {
-      baseUrl: this.getApiUrl(),
+      baseUrl: this.getUrl(),
       method,
       url,
       onError: this.error$.setter(),
@@ -152,8 +159,8 @@ export class PbClient {
       const serverTime = toDate(result).getTime();
       const localTime = (start + Date.now()) / 2;
       this.log.d('sync time', localTime, serverTime);
-      const timeOffset = serverTime - localTime;
-      this.timeOffset$.set(timeOffset);
+      const offset = serverTime - localTime;
+      this.offset$.set(offset);
     } catch (error) {
       this.log.e('initServerTime', error);
     }
@@ -165,7 +172,7 @@ export class PbClient {
    * @returns Current server time in milliseconds (may be inaccurate before first sync completes)
    */
   getTime() {
-    return this.timeOffset$.get() + Date.now();
+    return this.offset$.get() + Date.now();
   }
 
   /**

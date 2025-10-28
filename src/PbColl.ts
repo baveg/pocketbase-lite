@@ -167,11 +167,10 @@ export class PbColl<T extends PbModel> {
   ) {
     if (!id || !filename) return '';
 
-    const clientUrl = this.client.url$.get();
-    let url = pathJoin(clientUrl, `files/${this.name}/${id}/${filename}`);
-
-    const p = this.getFileParams(thumb, download, params);
-    if (count(p) > 0) url = setUrlParams(url, p);
+    const url = this.client.getUrl(
+      `files/${this.name}/${id}/${filename}`,
+      this.getFileParams(thumb, download, params),
+    );
 
     this.log.d('getFileUrl', id, filename, thumb, download, params, url);
     return url;
