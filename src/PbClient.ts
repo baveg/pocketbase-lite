@@ -6,10 +6,10 @@ import { flux } from 'fluxio/flux/Flux';
 import { fluxStored } from 'fluxio/flux/fluxStored';
 import { logger } from 'fluxio/logger/Logger';
 import { toError } from 'fluxio/cast/toError';
-import { toDate } from 'fluxio/cast/toDate';
 import { isNumber } from 'fluxio/check/isNumber';
 import { pathJoin } from 'fluxio/url/pathJoin';
 import { ReqMethod, ReqOptions } from 'fluxio/req/types';
+import { toDate } from 'fluxio/cast/toDate';
 import { PbAuth, PbModel, PbOptions } from './types';
 import { pbParams } from './pbParams';
 
@@ -20,7 +20,7 @@ export class PbClient {
   log = logger(this.key);
   error$ = flux<ReqError<any> | null>(null);
   auth$ = fluxStored<PbAuth | undefined>(this.key + 'Auth', undefined, isPbAuth);
-  url$ = fluxStored<string>(this.key + 'ApiUrl', '/api/', isString);
+  apiUrl$ = fluxStored<string>(this.key + 'ApiUrl', '', isString);
   timeOffset$ = fluxStored<number>(this.key + 'TimeOffset', 0, isNumber);
   timeoutMs = 10000;
   _realtime?: any;
@@ -28,25 +28,29 @@ export class PbClient {
   constructor(public readonly key: string = 'pbClient') {
     this.error$.on((error) => this.log.d('error', error));
     this.auth$.on((auth) => this.log.d('auth', auth));
-    this.url$.on((url) => this.log.d('url', url));
-    this.serverTime();
+    this.apiUrl$.on((apiUrl) => this.log.d('apiUrl', apiUrl));
+    this.initServerTime();
   }
 
   /**
    * Set the API base URL
    * @param url The base URL for API requests
    */
-  setUrl(url: string) {
-    return this.url$.set(url);
+  setApiUrl(url: string) {
+    this.log.d('setApiUrl', url);
+    this.apiUrl$.set(url);
+    this.initServerTime();
   }
 
   /**
    * Get the current API base URL
    * @returns The base URL string
    */
-  getUrl(service?: string) {
-    if (service) pathJoin(this.url$.get() || '', service);
-    return this.url$.get() || '';
+  getApiUrl(service?: string) {
+    const apiUrl = this.apiUrl$.get() || '/api/';
+    const url = service ? pathJoin(apiUrl, service) : apiUrl;
+    this.log.d('getApiUrl', apiUrl, service, url);
+    return url;
   }
 
   /**
@@ -55,6 +59,7 @@ export class PbClient {
    * @returns The auth object that was set
    */
   setAuth(auth: PbAuth | undefined) {
+    this.log.d('setAuth', auth);
     if (auth) {
       if (!isString(auth.token)) throw toError('no auth token');
       if (!isString(auth.id)) throw toError('no auth id');
@@ -102,7 +107,7 @@ export class PbClient {
     o: PbOptions<T> = {}
   ): ReqOptions {
     const result: ReqOptions = {
-      baseUrl: this.getUrl(),
+      baseUrl: this.getApiUrl(),
       method,
       url,
       onError: this.error$.setter(),
@@ -139,20 +144,19 @@ export class PbClient {
    * Triggers background sync but returns immediately with current time estimate
    * @returns Promise resolving to the current server time estimate
    */
-  async syncServerTime() {
+  async initServerTime() {
+    this.log.d('initServerTime');
     try {
       const start = Date.now();
       const result = await this.req('GET', 'now');
-      // TODO catch use res header ???
       const serverTime = toDate(result).getTime();
       const localTime = (start + Date.now()) / 2;
       this.log.d('sync time', localTime, serverTime);
       const timeOffset = serverTime - localTime;
       this.timeOffset$.set(timeOffset);
     } catch (error) {
-      this.log.e('syncServerTime', error);
+      this.log.e('initServerTime', error);
     }
-    return this.serverTime();
   }
 
   /**
@@ -160,21 +164,16 @@ export class PbClient {
    * Triggers initial sync in background if not yet synced, but returns immediately
    * @returns Current server time in milliseconds (may be inaccurate before first sync completes)
    */
-  serverTime() {
-    const timeOffset = this.timeOffset$.get();
-    if (timeOffset === 0) {
-      // Trigger async sync but return current estimate immediately (not yet synchronized)
-      this.syncServerTime();
-    }
-    return timeOffset + Date.now();
+  getTime() {
+    return this.timeOffset$.get() + Date.now();
   }
 
   /**
    * Get the current server time as a Date object
    * @returns Date object representing server time
    */
-  serverDate() {
-    return new Date(this.serverTime());
+  getDate() {
+    return new Date(this.getTime());
   }
 
   logout() {

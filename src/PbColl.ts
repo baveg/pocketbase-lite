@@ -29,7 +29,7 @@ export class PbColl<T extends PbModel> {
 
   call(method: ReqMethod, idOrUrl: string, o: PbOptions<T> = {}) {
     this.log.d('call', method, idOrUrl, o);
-    const url = idOrUrl.includes('/') ? this.getUrl(idOrUrl) : idOrUrl;
+    const url = idOrUrl.includes('/') ? idOrUrl : this.getUrl(idOrUrl);
     return this.client.req(method, url, o).catch((error) => {
       this.log.w('call error', error);
       throw error;
