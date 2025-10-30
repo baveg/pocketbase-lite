@@ -17,7 +17,7 @@ export class PbColl<T extends PbModel> {
 
   constructor(
     name: string,
-    public client: PbClient = getPbClient(),
+    public client: PbClient = getPbClient()
   ) {
     this.name = name;
     this.log = logger(name + 'Coll');
@@ -42,7 +42,12 @@ export class PbColl<T extends PbModel> {
     return this.call('GET', id, o);
   }
 
-  page(where?: PbWhere<T>, page: number = 1, perPage: number = this.perPage, o: PbOptions<T> = {}): Promise<PbPage<T>> {
+  page(
+    where?: PbWhere<T>,
+    page: number = 1,
+    perPage: number = this.perPage,
+    o: PbOptions<T> = {}
+  ): Promise<PbPage<T>> {
     this.log.d('page', where, page, perPage, o);
     return this.call('GET', '', { where, page, perPage, ...o });
   }
@@ -169,7 +174,7 @@ export class PbColl<T extends PbModel> {
 
     const url = this.client.getUrl(
       `files/${this.name}/${id}/${filename}`,
-      this.getFileParams(thumb, download, params),
+      this.getFileParams(thumb, download, params)
     );
 
     this.log.d('getFileUrl', id, filename, thumb, download, params, url);
@@ -193,7 +198,11 @@ export class PbColl<T extends PbModel> {
     return this.getFileUrl(id, filename, thumb, true, params);
   }
 
-  on(cb: (item: T, action: "update" | "create" | "delete") => void, topic?: string, o?: PbOptions<T>) {
+  on(
+    cb: (item: T, action: 'update' | 'create' | 'delete') => void,
+    topic?: string,
+    o?: PbOptions<T>
+  ) {
     return pbRealtime(this.client).on(this.name, cb, topic, o);
   }
 }
