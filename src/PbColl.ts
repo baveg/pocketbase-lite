@@ -121,7 +121,7 @@ export class PbColl<T extends PbModel> {
    */
   getFileParams(thumb?: number | string, download?: boolean, params?: Record<string, string>) {
     const p: Record<string, string> = {};
-    if (thumb) p.thumb = isNumber(thumb) ? `${thumb}x${thumb}` : thumb;
+    if (thumb) p.thumb = isFloat(thumb) ? `${thumb}x${thumb}` : thumb;
     if (download) p.download = '1';
     if (params) Object.assign(p, params);
     return p;
