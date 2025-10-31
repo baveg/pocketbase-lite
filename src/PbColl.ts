@@ -1,13 +1,7 @@
-import { Logger, logger } from 'fluxio/logger/Logger';
-import { toError } from 'fluxio/cast/toError';
-import { isNumber } from 'fluxio/check/isNumber';
-import { pathJoin } from 'fluxio/url/pathJoin';
-import { ReqMethod } from 'fluxio/req/types';
-import { count } from 'fluxio/object/count';
-import { setUrlParams } from 'fluxio/url/setUrlParams';
 import { PbOptions, PbCreate, PbKeys, PbModel, PbPage, PbUpdate, PbWhere } from './types';
 import { getPbClient, PbClient } from './PbClient';
 import { pbRealtime } from './PbRealtime';
+import { isFloat, logger, Logger, ReqMethod, toError } from 'fluxio';
 
 export class PbColl<T extends PbModel> {
   public readonly name: string;

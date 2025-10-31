@@ -1,8 +1,5 @@
-import { isDefined } from 'fluxio/check/isDefined';
+import { isArray, isDefined, jsonStringify, ReqParams } from 'fluxio';
 import { PbModel, PbWhere, PbOptions } from './types';
-import { jsonStringify } from 'fluxio/string/json';
-import { isArray } from 'fluxio/check/isArray';
-import { ReqParams } from 'fluxio/req/types';
 
 export const pbFilter = <T extends PbModel>(where: PbWhere<T> | undefined): string | undefined => {
   if (!where) return undefined;

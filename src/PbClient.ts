@@ -1,19 +1,23 @@
-import { req } from 'fluxio/req/req';
-import { ReqError } from 'fluxio/req/ReqError';
-import { Dictionary, isDictionary } from 'fluxio/check/isDictionary';
-import { isString } from 'fluxio/check/isString';
-import { flux } from 'fluxio/flux/Flux';
-import { fluxStored } from 'fluxio/flux/fluxStored';
-import { logger } from 'fluxio/logger/Logger';
-import { toError } from 'fluxio/cast/toError';
-import { isNumber } from 'fluxio/check/isNumber';
-import { pathJoin } from 'fluxio/url/pathJoin';
-import { ReqMethod, ReqOptions } from 'fluxio/req/types';
-import { toDate } from 'fluxio/cast/toDate';
+import {
+  req,
+  ReqError,
+  Dictionary,
+  isDictionary,
+  isString,
+  flux,
+  fluxStored,
+  logger,
+  isFloat,
+  pathJoin,
+  setUrlParams,
+  count,
+  toError,
+  ReqMethod,
+  ReqOptions,
+  toDate,
+} from 'fluxio';
 import { PbAuth, PbModel, PbOptions } from './types';
 import { pbParams } from './pbParams';
-import { count } from 'fluxio/object/count';
-import { setUrlParams } from 'fluxio/url/setUrlParams';
 
 export const isPbAuth = (v: any): v is PbAuth =>
   isDictionary(v) && isString(v.token) && isString(v.coll) && isString(v.id);
@@ -23,7 +27,7 @@ export class PbClient {
   error$ = flux<ReqError<any> | null>(null);
   auth$ = fluxStored<PbAuth | undefined>(this.key + 'Auth$', undefined, isPbAuth);
   url$ = fluxStored<string>(this.key + 'Url$', '', isString);
-  offset$ = fluxStored<number>(this.key + 'Offset$', 0, isNumber);
+  offset$ = fluxStored<number>(this.key + 'Offset$', 0, isFloat);
   timeoutMs = 10000;
   _realtime?: any;
 
@@ -31,7 +35,7 @@ export class PbClient {
     this.error$.on((error) => this.log.d('error', error));
     this.auth$.on((auth) => this.log.d('auth', auth));
     this.url$.on((url) => this.log.d('url', url));
-    this.initServerTime();
+    this.initTime();
   }
 
   getApiUrl() {
@@ -45,7 +49,7 @@ export class PbClient {
   setApiUrl(url: string) {
     this.log.d('setUrl', url);
     this.url$.set(url);
-    this.initServerTime();
+    this.initTime();
   }
 
   /**
@@ -151,8 +155,8 @@ export class PbClient {
    * Triggers background sync but returns immediately with current time estimate
    * @returns Promise resolving to the current server time estimate
    */
-  async initServerTime() {
-    this.log.d('initServerTime');
+  async initTime() {
+    this.log.d('initTime');
     try {
       const start = Date.now();
       const result = await this.req('GET', 'now');
@@ -162,7 +166,7 @@ export class PbClient {
       const offset = serverTime - localTime;
       this.offset$.set(offset);
     } catch (error) {
-      this.log.e('initServerTime', error);
+      this.log.e('initTime', error);
     }
   }
 
