@@ -27,6 +27,7 @@ The library uses strict TypeScript settings with comprehensive type checking ena
 Central client managing API connections, authentication, and server time synchronization.
 
 **Key Features:**
+
 - **API URL Management**: Configurable base URL with `setApiUrl()` and `getUrl()`
 - **Authentication**: Token-based auth stored in reactive `auth$` flux with automatic header injection
 - **Time Synchronization**: Automatic server time sync with `initTime()`, accessible via `getTime()` and `getDate()`
@@ -35,6 +36,7 @@ Central client managing API connections, authentication, and server time synchro
 - **Reactive State**: Uses fluxio's `flux()` and `fluxStored()` for reactive auth, URL, and error state
 
 **Singleton Pattern:**
+
 ```typescript
 export const getPbClient = () => pbClient || (pbClient = new PbClient());
 ```
@@ -44,6 +46,7 @@ export const getPbClient = () => pbClient || (pbClient = new PbClient());
 Generic collection class for CRUD operations on PocketBase collections.
 
 **Core Methods:**
+
 - `get(id)` - Fetch single record by ID
 - `page(where, page, perPage)` - Paginated query with filtering
 - `filter(where)` - Filtered query without pagination
@@ -58,11 +61,13 @@ Generic collection class for CRUD operations on PocketBase collections.
 - `upsert(where, changes)` - Update if exists, create if not
 
 **File Operations:**
+
 - `getFileUrl(id, filename, thumb?, download?, params?)` - Build file URL with optional thumbnail sizing
 - `getDownloadUrl(id, filename, thumb?, params?)` - Build download URL
 - `getFile(id, filename, ...)` - Download file as Blob
 
 **Real-time Subscriptions:**
+
 - `on(callback, topic?, options?)` - Subscribe to collection changes (creates, updates, deletes)
 
 #### PbAuthColl (`src/PbAuthColl.ts`)
@@ -70,6 +75,7 @@ Generic collection class for CRUD operations on PocketBase collections.
 Extends `PbColl` with authentication-specific methods for user collections.
 
 **Authentication Methods:**
+
 - `signUp(email, password)` - Create new user account
 - `login(identity, password)` - Authenticate user and set auth token
 - `passwordReset(email)` - Request password reset email
@@ -79,6 +85,7 @@ Extends `PbColl` with authentication-specific methods for user collections.
 Manages Server-Sent Events (SSE) connections for real-time updates.
 
 **Key Features:**
+
 - **Automatic Connection Management**: Connects when subscriptions exist, disconnects when none remain
 - **Subscription Tracking**: Maintains subscriptions per collection/topic with automatic cleanup
 - **Reconnection Logic**: Exponential backoff with automatic reconnection on connection loss
@@ -87,12 +94,14 @@ Manages Server-Sent Events (SSE) connections for real-time updates.
 - **Listener Management**: Adds/removes event listeners dynamically based on active subscriptions
 
 **Connection Lifecycle:**
+
 1. `connect()` - Establishes EventSource connection, waits for PB_CONNECT
 2. `update()` - Sends subscription list to server, manages connection state
 3. `disconnect()` - Cleans up listeners and closes EventSource
 4. `scheduleReconnect()` - Handles reconnection with delay
 
 **Usage Pattern:**
+
 ```typescript
 const unsubscribe = collection.on((record, action) => {
   console.log('Record:', record, 'Action:', action); // 'create' | 'update' | 'delete'
@@ -102,6 +111,7 @@ const unsubscribe = collection.on((record, action) => {
 ### Type System (`src/types.ts`)
 
 **Core Types:**
+
 - `PbModel` - Base interface with id, created, updated fields
 - `PbCreate<T>` - Omits generated fields for creation
 - `PbUpdate<T>` - Partial type for updates
@@ -112,6 +122,7 @@ const unsubscribe = collection.on((record, action) => {
 - `PbOperator` - Filter operators (=, !=, >, >=, <, <=, ~, !~, ?=, etc.)
 
 **Filter System:**
+
 - Supports all PocketBase operators including "any/at least one" variants (?=, ?!=, etc.)
 - Type-safe field access via keyof T
 - Supports single conditions or arrays of conditions
@@ -120,12 +131,14 @@ const unsubscribe = collection.on((record, action) => {
 ### Query Parameter Building (`src/pbParams.ts`)
 
 Converts `PbOptions<T>` into PocketBase API query parameters:
+
 - `orderBy` → `sort` (comma-separated)
 - `select` → `fields` (comma-separated)
 - `where` → `filter` (PocketBase filter syntax)
 - Handles expand, pagination (page, perPage), and skipTotal flags
 
 **Filter Formatting:**
+
 - Converts typed where clauses to PocketBase filter strings
 - Handles operators: `[">=", 10]` → `field >= 10`
 - Quotes strings, formats dates via JSON.stringify
@@ -134,9 +147,11 @@ Converts `PbOptions<T>` into PocketBase API query parameters:
 ## Dependencies
 
 **External:**
+
 - `fluxio` - Reactive state management, utilities, and request handling
 
 **Fluxio Integration:**
+
 - Uses `flux()` and `fluxStored()` for reactive state
 - Uses `req()` for HTTP requests with authentication
 - Uses utility functions: `isDictionary`, `isString`, `isFloat`, `pathJoin`, `setUrlParams`, etc.
@@ -163,7 +178,7 @@ await userColl.login('user@example.com', 'password');
 // Query with type-safe filters
 const posts = await postColl.all({
   author: userId,
-  created: ['>=', new Date('2024-01-01')]
+  created: ['>=', new Date('2024-01-01')],
 });
 
 // Subscribe to real-time updates
@@ -209,22 +224,26 @@ The library provides the data layer for the main application's collection-based 
 ## Development Guidelines
 
 **Code Quality:**
+
 - Follow strict TypeScript typing throughout
 - Use generic types for collection methods to maintain type safety
 - Never expose raw API responses; always type them as `T extends PbModel`
 - Use the logger for all debug/info/warn/error messages
 
 **Error Handling:**
+
 - All async methods should catch and re-throw errors after logging
 - Use `toError()` from fluxio to normalize error objects
 - Client errors flow through `error$` flux for reactive error handling
 
 **State Management:**
+
 - Auth state is reactive via `auth$` flux with localStorage persistence
 - URL changes trigger time synchronization via `initTime()`
 - All fluxes use validators (isPbAuth, isString, isFloat) for type safety
 
 **Real-time Subscriptions:**
+
 - Subscriptions automatically manage EventSource lifecycle
 - Connection state checked via `getIsConnected()` with heartbeat monitoring
 - Reconnection logic handles network interruptions transparently
