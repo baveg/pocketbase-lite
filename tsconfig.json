@@ -30,8 +30,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "fluxio": ["./fluxio/src/index"],
-      "fluxio/*": ["./fluxio/src/*"]
+      "fluxio": ["../fluxio/src/index"],
+      "fluxio/*": ["../fluxio/src/*"]
     }
   },
   "include": [

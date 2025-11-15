@@ -198,12 +198,17 @@ export class PbClient {
     return this.req('POST', `collections/${auth.coll}/auth-refresh`, {
       ...o,
     }).then((result: any) => {
-      const { status, message, token, record } = result || {};
-      if (status === 401) {
-        this.logout();
-        throw toError(message);
-      }
+      this.log.d('authRefresh', result);
+      const { token, record } = result || {};
       return this.setAuth({ ...record, coll: auth.coll, token });
+    }).catch((error) => {
+      this.log.e('authRefresh', error);
+      if (error instanceof ReqError) {
+        if (error.status === 401) {
+          this.logout();
+          throw toError(error.message);
+        }
+      }
     });
   }
 }
