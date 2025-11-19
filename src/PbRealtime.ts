@@ -1,4 +1,4 @@
-import { Dictionary } from 'fluxio/check/isDictionary';
+import { Dictionary } from 'fluxio/types/Dictionary';
 import { getPbClient, PbClient } from './PbClient';
 import { PbModel, PbOptions } from './types';
 import { logger } from 'fluxio/logger/Logger';
@@ -92,7 +92,7 @@ export class PbRealtime {
       if (listeners && listeners.length > 0) {
         const listener = (this.wrappedListeners[key] = (event: any) => {
           this.heartbeat = Date.now();
-          listeners.forEach((listener) => listener(event));
+          listeners.forEach((cb: (data: any) => void) => cb(event));
         });
         eventSource.addEventListener(key, listener);
       }
